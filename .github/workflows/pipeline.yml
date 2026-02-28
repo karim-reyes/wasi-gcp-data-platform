@@ -1,0 +1,35 @@
+name: Retail Data Pipeline Wasi
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ingestion-job:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        pip install pandas sqlalchemy psycopg2-binary google-cloud-storage
+
+    - name: Authenticate GCP
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_KEY }}
+
+    - name: Run ingestion pipeline
+      env:
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+      run: |
+        python ingestion/load_to_cloudsql.py
